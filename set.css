@@ -1,0 +1,831 @@
+/* ============================================================
+   Metzler SET configuration flow – set-specific components, embedded in the
+   duplicated PDP's buy box. Uses the shared design tokens from pdp.css.
+   ============================================================ */
+/* Success/availability green: the DS base green (#009951) is only ~3.3–3.7:1 on
+   white/green-50 — fails AA for the small "inklusive" / Set-Rabatt / "Sofort
+   verfügbar" text. Map the configurator's green to the DS's darker shade
+   green-600 (#007A40 ≈ 4.9–5.4:1), so it stays a design-system green AND passes AA. */
+.setcfg, #pdpStickyBar { --color-green: var(--color-green-600); }
+.setp-hero__eyebrow { color: var(--color-teal); }
+/* Set title: a clean, confident lockup of the two products – the premium-shop way
+   to title a bundle. Brand + "Set" live in the eyebrow; each product's full name
+   and description are carried by its product card below. Balanced two-line wrap. */
+.pdp-b .set-title { text-wrap: balance; }
+.set-title__amp { color: var(--color-graphite-400); font-weight: 400; margin: 0 0.1em; }
+
+.setcfg { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ---- one cohesive configurator card (integrity): the .cfgb-dock chevron ribbon +
+   step title are the card HEADER band; the active step is the card BODY. No nested,
+   floating boxes — dock, title and content read as a single unit. ---- */
+.setwiz { background: var(--color-white); border: 1px solid var(--color-graphite-200); border-radius: var(--radius-lg);
+  overflow-anchor: none; }   /* no drop shadow — the PDP's config card (.cfgb) has none, just a 1px border */
+/* sticky progress bar: the dock pins below the site header while the configurator
+   is in view (single-product PDP behaviour); the dock clips its own ribbon so the
+   card no longer needs overflow:hidden (which would break sticky). */
+/* z-index 46 sits above the sticky green contact bar (#quickbar, z-45 desktop) but
+   below the site header (z-50), so the pinned ribbon replaces the contact bar rather
+   than sliding under it. Mobile raises it further (quickbar is z-55 there). */
+.setwiz .cfgb-dock { position: sticky; top: var(--set-dock-top, 5.5rem); z-index: 46; padding-top: 0;
+  border: 0; border-bottom: 1px solid var(--color-graphite-200); border-radius: var(--radius-lg) var(--radius-lg) 0 0; overflow: hidden;
+  box-shadow: none; transition: box-shadow .2s ease; }
+.setwiz .cfgb-dock.is-pinned { box-shadow: 0 10px 18px -12px rgba(10,20,20,0.28); }
+/* Desktop: the dock pins 2px below the contact bar (--set-dock-top includes the gap).
+   A white cap (offset-up shadow, no layout shift) fills that 2px slit so no scrolling
+   content shows through — a clean breather between the two dark-teal bars. */
+@media (min-width: 48rem) {
+  .setwiz .cfgb-dock.is-pinned { box-shadow: 0 -2px 0 0 var(--color-white), 0 10px 18px -12px rgba(10,20,20,0.28); }
+}
+/* Green contact bar fades smoothly when hidden. On MOBILE it's hidden for the whole
+   scroll (body.is-scrolled, below) while the ribbon/section-nav own the top slot. On
+   DESKTOP it stays visible and the dock stacks below it (single-PDP behaviour). */
+.quickbar { transition: opacity .22s ease; }
+/* sentinel: 0-height flow marker before the dock; JS grows it to the dock's in-flow
+   height while the ribbon is fixed (mobile takeover) so the steps below don't jump. */
+.cfgb-sentinel { display: block; height: 0; }
+/* when the dock is pinned the ribbon travels alone — hide the product-header band
+   (it shows only while the dock sits at rest in the card). */
+.setwiz .cfgb-dock.is-stuck .setwizhd { display: none; }
+.setwiz .cfgb-dock__title { padding-top: 0.1rem; }
+/* larger progress-ribbon tab labels + "Schritt X von N" line (per request) */
+.setwiz .cfgb-dock .cfgb-bar__label { font-size: 0.9375rem; }
+.setwiz .cfgb-dock .cfgb-bar__num { font-size: 0.875rem; }
+.setwiz .cfgb-dock__n { font-size: 0.875rem; }
+
+/* ---- dock heading band = the product header (thumb · identity · live price).
+   Replaces the old "Schritt X von N / Türklingel" line; the progress ribbon above
+   already conveys the step, so the heading carries the product instead. ---- */
+.setwiz .cfgb-dock__title.setwizhd { display: flex; align-items: center; gap: 0.9rem; padding-top: 0.25rem; }
+.setwizhd__img { flex: none; width: 3.25rem; height: 3.25rem; object-fit: contain; border-radius: var(--radius);
+  background: var(--color-paper); border: 1px solid var(--color-graphite-200); padding: 0.25rem; box-sizing: border-box; }
+.setwizhd__img[hidden] { display: none; }
+.setwizhd__id { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+/* "PRODUKT N" caption in graphite-600, consistent with the "KONFIGURIERT" label */
+.setwizhd__cap { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-graphite-600); }
+.setwizhd__cap[hidden] { display: none; }
+.setwiz .setwizhd__name { display: block; margin: 0.1rem 0; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; color: var(--color-digital-black); line-height: 1.2; }
+.setwizhd__sub { font-size: 0.8125rem; font-weight: 500; line-height: 1.45; color: var(--color-graphite-700); }
+.setwizhd__sub[hidden] { display: none; }
+.setwizhd__price { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+.setwizhd__price[hidden] { display: none; }
+.setwizhd__pricecap { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-graphite-600); }
+.setwizhd__price b { font-size: 1.25rem; font-weight: 700; color: var(--color-digital-black); font-variant-numeric: tabular-nums; }
+.setwiz__stage { padding: 1.4rem 1.45rem 1.55rem; }
+
+/* ---- gate: the configurator stays collapsed until a set colour is chosen.
+   While locked, the dock + steps are hidden and a CTA shows instead; the CTA
+   nudges the user to the colour rail. Selecting a colour drops .is-locked and
+   the configurator reveals. ---- */
+.setwiz__lock { display: none; padding: 0; }
+.setwiz.is-locked .setwiz__lock { display: block; }
+/* while locked the card is just the CTA — drop the wizard card's own chrome */
+.setwiz.is-locked { border-color: transparent; box-shadow: none; background: none; }
+.setwiz.is-locked .setwiz__reveal { display: none; }
+/* reveal wrapper: set.js animates its height open on unlock, clipping content
+   only while animating (overflow released afterwards so the sticky dock works) */
+.setwiz__reveal { transition: height .42s cubic-bezier(.22,1,.36,1); }
+.setwiz__reveal.is-animating { overflow: hidden; }
+/* CTA follows the design-system primary button (.btn--primary.btn--lg):
+   height-based sizing, weight 500, 4px radius, no shadow, teal-600/700 states */
+.setwiz__lockcta { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  height: 3.25rem; padding: 0 2rem; background: var(--color-teal); color: #fff; border: 0; border-radius: var(--radius);
+  font: inherit; font-size: 1.0625rem; font-weight: 500; white-space: nowrap; cursor: pointer;
+  transition: background .14s, color .14s; }
+.setwiz__lockcta:hover { background: var(--color-teal-600); }
+.setwiz__lockcta:active { background: var(--color-teal-700); }
+.setwiz__lockcta:focus-visible { outline: 2px solid var(--color-digital-black); outline-offset: 2px; }
+/* gentle reveal when the configurator unlocks */
+@keyframes setwiz-reveal { from { opacity: 0; transform: translateY(0.4rem); } to { opacity: 1; transform: none; } }
+.setwiz:not(.is-locked) .setwiz__stage { animation: setwiz-reveal .4s ease; }
+@media (prefers-reduced-motion: reduce) { .setwiz:not(.is-locked) .setwiz__stage { animation: none; } }
+/* the active step flows as the card body – strip each step's own card chrome */
+.setwiz__stage .setprod { border: 0; border-radius: 0; background: none; padding: 0; }
+.setwiz__stage .setsum__card { border: 0; border-radius: 0; background: none; padding: 0; }
+.setwiz__stage .setsum__delivery { margin-top: 1.5rem; }
+/* calmer step transitions: drop the staggered per-child rise (busy on the tall
+   option grids) and use one gentle height motion when a step opens/collapses. */
+.setwiz .stepr__item.is-active .stepr__pad > * { opacity: 1; transform: none; animation: none !important; }
+.setwiz .stepr__body { transition: grid-template-rows .26s ease; }
+
+/* ---- shared finish rail ---- */
+.setfin { position: relative; overflow: hidden; background: var(--color-white); border: 1px solid var(--color-graphite-200); border-radius: var(--radius-lg); padding: 1.3rem 1.4rem 1.4rem; }
+/* signature teal accent bar — matches the lead price panel (no own radius; the
+   card's overflow:hidden clips it to the rounded corners). */
+.setfin::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 0.1875rem; background: var(--color-teal); }
+.setfin__cap { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-teal); }
+.setfin__title { margin: 0.35rem 0 0.2rem; font-size: 1.1875rem; font-weight: 700; letter-spacing: -0.01em; color: var(--color-digital-black); }
+.setfin__sub { margin: 0 0 1rem; font-size: 0.875rem; color: var(--color-graphite-600); }
+.setfin__sub b { color: var(--color-digital-black); }
+.setfin__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.55rem; }
+.setfin__sw { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.6rem; cursor: pointer; text-align: left;
+  background: var(--color-white); border: 1px solid var(--color-graphite-300); border-radius: var(--radius); font: inherit;
+  transition: border-color .18s cubic-bezier(.22,1,.36,1), box-shadow .18s cubic-bezier(.22,1,.36,1); }
+.setfin__sw:hover { border-color: var(--color-graphite-400); }
+.setfin__sw[aria-pressed="true"] { border-color: var(--color-teal); box-shadow: inset 0 0 0 1px var(--color-teal); }
+.setfin__chip { flex: none; width: 2rem; height: 2rem; border-radius: 0.3rem; background-size: cover; background-position: center; border: 1px solid rgba(0,0,0,0.12); box-sizing: border-box; }
+.setfin__nm { font-size: 0.8125rem; font-weight: 700; color: var(--color-digital-black); line-height: 1.25; min-width: 0; }
+.setfin__nm em { display: block; font-style: normal; font-weight: 500; font-size: 0.75rem; color: var(--color-graphite-600); }
+.setfin__solohead { margin: 1.2rem 0 0.7rem; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-graphite-500); padding-top: 1rem; border-top: 1px solid var(--color-graphite-200); }
+.setfin__sw--solo { position: relative; }
+.setfin__break { position: absolute; top: 0.3rem; right: 0.35rem; font-size: 0.625rem; font-weight: 700; color: var(--color-red); background: var(--color-red-50); border-radius: var(--radius-pill); padding: 0.05rem 0.4rem; }
+.setfin__sw--sm { padding: 0; border-radius: 0.35rem; }
+.setfin__sw--sm .setfin__chip { width: 2.3rem; height: 2.3rem; }
+.setfin__nudge { display: flex; align-items: flex-start; gap: 0.7rem; margin-top: 1rem; padding: 0.85rem 1rem; background: var(--color-teal-50); border: 1px solid var(--color-teal-75); border-radius: var(--radius-lg); }
+.setfin__nudge svg { flex: none; width: 1.35rem; height: 1.35rem; color: var(--color-teal); margin-top: 0.05rem; }
+.setfin__nudgetext { font-size: 0.8125rem; line-height: 1.5; color: var(--color-graphite-700); }
+.setfin__nudgetext b { color: var(--color-digital-black); }
+.setfin__nudgeact { display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap; flex-basis: 100%; }
+.setfin__nudgebtn { font: inherit; font-size: 0.8125rem; font-weight: 700; color: #fff; background: var(--color-teal); border: 0; border-radius: var(--radius); padding: 0.5rem 0.9rem; cursor: pointer; }
+.setfin__nudgebtn:hover { background: var(--color-teal-600); }
+.setfin__nudgecancel { font: inherit; font-size: 0.8125rem; font-weight: 700; color: var(--color-graphite-600); background: none; border: 0; cursor: pointer; }
+.setfin__nudgecancel:hover { color: var(--color-digital-black); }
+
+/* ---- shared-foundation group: set colour = parent, products = branches ----
+   The colour rail is the foundation; a connector spine drops from it and each
+   product card branches off, visually inheriting the set finish. */
+.setgroup { position: relative; display: flex; flex-direction: column; }
+.setgroup__branches { position: relative; margin-top: 1.15rem; padding-left: 1.95rem; display: flex; flex-direction: column; gap: 1.15rem; }
+/* spine: teal where it leaves the foundation, then a calm rail down the branches */
+.setgroup__branches::before { content: ""; position: absolute; left: 0.72rem; top: -1.15rem; bottom: 0; width: 2px; border-radius: 1px;
+  background: linear-gradient(var(--color-teal) 0 1.15rem, var(--color-graphite-200) 1.15rem);
+  -webkit-mask-image: linear-gradient(#000 80%, transparent); mask-image: linear-gradient(#000 80%, transparent); }
+/* node on the foundation where the spine begins */
+.setgroup .setfin::after { content: ""; position: absolute; left: 0.72rem; bottom: 0; transform: translate(-50%, 50%);
+  width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--color-teal); border: 2px solid var(--color-white); box-sizing: border-box; z-index: 1; }
+/* each product branches off the spine with a connector + node at its header */
+.setgroup__branches > .setprod::before { content: ""; position: absolute; left: -1.23rem; top: 2.45rem; width: 1.23rem; height: 2px; background: var(--color-graphite-200); }
+.setgroup__branches > .setprod::after { content: ""; position: absolute; left: -1.55rem; top: 2.15rem; width: 0.66rem; height: 0.66rem; border-radius: 50%;
+  background: var(--color-white); border: 2px solid var(--color-graphite-300); box-sizing: border-box; transition: border-color .2s ease, background .2s ease; }
+/* once a product inherits the set colour, light up its branch */
+.setgroup__branches > .setprod.is-set::before { background: var(--color-teal); }
+.setgroup__branches > .setprod.is-set::after { border-color: var(--color-teal); background: var(--color-teal); }
+@media (max-width: 30rem) {
+  .setgroup__branches { padding-left: 1.45rem; }
+  .setgroup__branches::before { left: 0.5rem; }
+  .setgroup .setfin::after { left: 0.5rem; }
+  .setgroup__branches > .setprod::before { left: -0.95rem; width: 0.95rem; }
+  .setgroup__branches > .setprod::after { left: -1.27rem; }
+}
+
+/* ---- product panels ---- */
+.setprod { position: relative; background: var(--color-white); border: 1px solid var(--color-graphite-200); border-radius: var(--radius-lg); padding: 1.4rem 1.45rem;
+  transition: border-color .2s ease; }
+/* both products stay fully interactive at all times – no blocking overlay. Until a
+   set colour is picked, each header shows an actionable "Set-Farbe wählen" cue. */
+.setprod.is-set { border-color: var(--color-graphite-200); }
+
+/* header */
+.setprod__head { display: flex; align-items: flex-start; gap: 1rem; }
+.setprod__img { flex: none; width: 4.25rem; height: 4.25rem; object-fit: contain; border-radius: var(--radius); background: var(--color-paper); border: 1px solid var(--color-graphite-200); padding: 0.3rem; box-sizing: border-box; }
+.setprod__id { flex: 1 1 auto; min-width: 0; }
+.setprod__cap { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-teal); }
+.setprod__name { margin: 0.15rem 0; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; color: var(--color-digital-black); }
+/* product spec/meta line (Material · Maße · Art-Nr.) — key at-a-glance details,
+   so keep them clearly legible: larger + darker than a muted caption. The facts
+   carry the weight; the middot separators recede so each fact reads as its own
+   scannable chunk. */
+.setprod__sub { margin: 0.15rem 0 0; font-size: 0.875rem; font-weight: 500; line-height: 1.5; color: var(--color-graphite-700); }
+.setprod__subsep { font-weight: 400; color: var(--color-graphite-400); }
+.setprod__price { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+.setprod__pricecap { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-graphite-600); }
+.setprod__price b { font-size: 1.25rem; font-weight: 700; color: var(--color-digital-black); font-variant-numeric: tabular-nums; }
+
+/* per-product configurator: the single-product .stepr accordion (styling from
+   pdp-b.css); here we only space it. */
+/* the product header now lives in the dock heading band, so the step list no
+   longer needs a top margin to clear it — the stage's own top padding is enough */
+.setprod__steps { margin-top: 0; }
+
+/* ============================================================
+   Configurator step rows — premium grouped panels, no right-side labels.
+   Surface language matches the lead price panel above: a restrained PAPER fill
+   (#F5F6FA) + a hairline border. Teal is used sparingly — only the ring badge.
+   State builds on that base:
+     · to-do → paper fill + hairline + teal ring badge
+     · open  → lifts to a clean white card with a teal edge + soft shadow
+     · done  → teal-filled check badge + chosen value revealed under the title
+   Scoped to .setprod__steps so the base .stepr component stays intact.
+   ============================================================ */
+/* calmer rhythm + a firmer tap target. The step list breaks out to the card's
+   inner edges (full-width, squared) while action rows below stay inset. */
+.setprod__steps.stepr { gap: 0.7rem; margin: 0 -1.45rem; }
+.setprod__steps .stepr__head { padding: 1.05rem 1.45rem; gap: 0.9rem; align-items: center; }
+.setprod__steps .stepr__pad { padding-left: 1.45rem; padding-right: 1.45rem; }
+
+/* title = the primary anchor */
+.setprod__steps .stepr__title { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+/* stacked value line: hidden while empty (no "Keine Auswahl" prose); the chosen
+   value appears here — dark + confident — only once the step is done */
+.setprod__steps .stepr__titles { gap: 0.2rem; }
+.setprod__steps .stepr__item:not(.is-done) .stepr__pick { display: none; }
+.setprod__steps .stepr__item.is-done .stepr__pick { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--color-graphite-600); }
+
+/* teal ring badge on every not-done row, filling into a check when done */
+.setprod__steps .stepr__item:not(.is-done) .stepr__node { background: transparent; box-shadow: inset 0 0 0 1.5px var(--color-teal); }
+.setprod__steps .stepr__item:not(.is-done) .stepr__num { color: var(--color-teal); font-weight: 700; }
+
+/* premium grouped panels: a restrained paper fill + hairline, matching the
+   lead price panel's surface (no teal fill, no spine) */
+.setprod__steps .stepr__item { background: var(--color-paper); border-color: var(--color-graphite-200); border-radius: 0; box-shadow: none; }
+/* on hover the row reads as a full-width band: darker top/bottom hairlines, no side
+   borders (they'd otherwise sit as short verticals at the card edges) */
+.setprod__steps .stepr__item:not(.is-done):not(.is-active):hover { border-color: var(--color-graphite-400); border-left-color: transparent; border-right-color: transparent; }
+/* the open row keeps the SAME paper background and neutral border as the
+   collapsed rows (no teal edge, no drop shadow — flat like the rest of the config) */
+.setprod__steps .stepr__item.is-active { background: var(--color-paper); border-color: var(--color-graphite-200); box-shadow: none; }
+.setprod__steps .stepr__item.is-active .stepr__node { background: var(--color-teal-50); box-shadow: inset 0 0 0 1.5px var(--color-teal); }
+
+/* chevron: enlarged and ALWAYS visible — every row (incl. done) shows the same
+   expand affordance so the sections stay consistent */
+.setprod__steps .stepr__chev { width: 1.4rem; height: 1.4rem; color: var(--color-graphite-500); }
+.setprod__steps .stepr__item.is-done .stepr__chev { display: block; }
+
+/* ---- horizontal wizard: one step visible at a time ---- */
+.setcfg .setprod[hidden], .setcfg .setsum[hidden] { display: none !important; }
+/* product-level nav footer (Zurück · running total · Weiter) */
+.setwiz__nav { display: flex; align-items: center; gap: 0.9rem; margin-top: 1.2rem; }
+.setwiz__spacer { flex: 0 0 auto; }
+/* price-details breakdown — always shown below the step nav. The wrapper is
+   permanently open (no height animation), so it must NOT clip: overflow:hidden
+   here was cropping the grey frame's -1.45rem full-bleed breakout, leaving the
+   frame visually only content-width (narrower than the config bars) and clipping
+   its grey side gutters to white. overflow:visible lets the frame reach the full
+   config-bar width. */
+.setwiz__details { display: grid; grid-template-rows: 1fr; }
+.setwiz__detailsinner { overflow: visible; min-height: 0; }
+/* price detail: TWO separate white cards (top = item list, bottom = price/CTA)
+   with a grey gap between them, floating in the paper (grey) frame with even grey
+   margins on all sides — top, left, right AND bottom (frame padding 0.9rem 1.45rem). */
+.setdt { margin: 0.9rem -1.45rem -1.55rem; display: flex; flex-direction: column; gap: 0.9rem;
+  padding: 0.9rem 1.45rem; background: var(--color-paper); border: 0.0625rem solid var(--color-graphite-200); border-left: 0; border-right: 0; border-radius: 0; }
+.setdt__items, .setdt__sum { background: var(--color-white); border: 0.0625rem solid var(--color-graphite-200); border-radius: var(--radius-lg); padding: 1.1rem 1.2rem; }
+/* qty stepper + CTA live inside the price card, below the availability line
+   (stepper hide-when-precolor + CTA flex sizing come from the shared .setbuy__row
+   / .cfgb-buyrow rules) */
+.setdt__sum .setbuy__row { margin-top: 1.1rem; }
+/* configured items — mirrors the single-product PDP's .sum-row list: one flat
+   itemised list, uniform 0.8125rem, a hairline (graphite-100) between EVERY row,
+   names in digital-black (bold for the product), prices bold + green "inklusive" */
+.setdt__item, .setdt__opt { display: flex; justify-content: space-between; align-items: center; gap: 0.9rem; margin: 0; padding: 0.55rem 0; }
+.setdt__items > * + * { border-top: 1px solid var(--color-graphite-100); }
+/* hierarchy: product lines are the parent (14px bold black); their option details sit
+   one level down (13px, name muted to graphite-700, value in medium weight). */
+.setdt__iname { font-size: 0.875rem; font-weight: 700; color: var(--color-digital-black); line-height: 1.3; }
+.setdt__iprice { font-size: 0.875rem; font-weight: 700; color: var(--color-digital-black); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.setdt__oname { font-size: 0.8125rem; color: var(--color-graphite-700); }
+.setdt__oval { font-size: 0.8125rem; font-weight: 600; color: var(--color-digital-black); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.setdt__oval.is-incl { color: var(--color-green); font-weight: 600; }
+/* price summary block (right-aligned, like the live "Preis wie konfiguriert") */
+.setdt__sum { text-align: right; }
+/* AA contrast: graphite-600 (~5.4:1), not graphite-500 (~2.5:1, fails) */
+/* label treatment (uppercase, tracked) — reads as the price's LABEL, not body text,
+   and matches the lead price panel's "PREIS WIE KONFIGURIERT" eyebrow. */
+.setdt__eyebrow { font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--color-graphite-600); }
+.setdt__price { display: flex; align-items: baseline; justify-content: flex-end; gap: 0.5rem; margin-top: 0.1rem; }
+.setdt__price b { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-digital-black); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.setdt__was { font-size: 0.95rem; color: var(--color-graphite-600); text-decoration: line-through; font-variant-numeric: tabular-nums; }
+.setdt__mult { font-size: 0.8125rem; font-weight: 700; color: var(--color-graphite-500); }
+/* savings = a green pill (value/money-saved) — the deal reads as a distinct,
+   scannable beat rather than a plain line */
+.setdt__save { display: inline-flex; align-items: baseline; gap: 0.3rem; margin: 0.5rem 0 0; padding: 0.22rem 0.6rem;
+  font-size: 0.8125rem; font-weight: 700; color: var(--color-green); background: var(--color-green-50); border-radius: var(--radius-pill); }
+.setdt__save b { color: var(--color-green); }
+.setdt__meta { margin: 0.45rem 0 0; font-size: 0.75rem; color: var(--color-graphite-600); }
+.setdt__meta a { color: var(--color-teal); text-underline-offset: 0.12rem; }
+/* availability = green status dot + text (calm in-stock reassurance) */
+.setdt__avail { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0.5rem 0 0; font-size: 0.8125rem; font-weight: 700; color: var(--color-green); }
+.setdt__avail::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-green); }
+/* back links read in the primary brand colour (teal #015253), like all links */
+.setwiz__back { display: inline-flex; align-items: center; gap: 0.3rem; font: inherit; font-size: 0.875rem; font-weight: 700; color: var(--color-teal);
+  background: none; border: 0; padding: 0.55rem 0.2rem; cursor: pointer; transition: color .16s; }
+.setwiz__back svg { width: 1.05rem; height: 1.05rem; }
+.setwiz__back:hover { color: var(--color-teal-600); }
+/* configuration nav = SECONDARY action (black), mirroring the single PDP .cfgb-nav__fwd */
+.setwiz__next { flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; font: inherit; font-size: 0.9375rem; font-weight: 700; color: #fff;
+  background: var(--color-digital-black); border: 0; border-radius: var(--radius); padding: 0.7rem 1.25rem; cursor: pointer;
+  transition: background .16s, transform .12s; }
+.setwiz__next::after { content: "→"; font-weight: 400; }
+.setwiz__next:hover { background: var(--color-black); }
+.setwiz__next:active { transform: translateY(1px); }
+.setwiz__next:focus-visible { outline: 2px solid var(--color-digital-black); outline-offset: 2px; }
+/* PRIMARY action (teal) — the always-live set cart. Qty stepper + CTA share the
+   single-PDP .cfgb-buyrow row; on product steps it lives inside the price card
+   (.setdt__sum), on the Übersicht it sits in the summary card. */
+.setbuy__row { align-items: stretch; }
+.setbuy__row.is-precolor .cfgb-buyrow__qty { display: none; }        /* no colour yet → CTA spans full width */
+/* qty stepper + CTA ALWAYS share one line (never wrap). The CTA shrinks (min-width:0)
+   and, on the narrowest columns where the full label can't fit beside the stepper,
+   its text wraps INSIDE the button (which grows vertically) rather than the row
+   breaking — so the two controls stay side by side at every width. */
+.setbuy__row.cfgb-buyrow { flex-wrap: nowrap; align-items: stretch; }
+.cfgb-buyrow .setsum__cta { flex: 1 1 auto; width: auto; min-width: 0; white-space: normal; line-height: 1.2;
+  height: auto; min-height: 3rem; padding-top: 0; padding-bottom: 0; margin-top: 0; }
+/* back link above the Übersicht summary */
+/* the summary back link reads in the primary brand colour (teal #015253) */
+.setsum__back { margin-bottom: 0.85rem; color: var(--color-teal); }
+.setsum__back:hover { color: var(--color-teal-600); }
+/* single-product price panel inside the set summary */
+.setsum .pdp-price--lead { margin-top: 1.15rem; }
+.setsum .setbuy__row { margin-top: 1.1rem; }
+
+/* separate-finish (divergence) block */
+.setprod__sep { margin: 1rem 0 0.4rem; padding: 0.85rem 1rem; background: var(--color-paper); border: 1px dashed var(--color-graphite-300); border-radius: var(--radius-lg); }
+.setprod__seplbl { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-graphite-600); }
+.setprod__sepgrid { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.55rem 0 0.4rem; }
+.setprod__relink { font: inherit; font-size: 0.8125rem; font-weight: 700; color: var(--color-teal); background: none; border: 0; cursor: pointer; padding: 0.2rem 0; }
+.setprod__relink:hover { text-decoration: underline; }
+
+/* collapsible configuration – toggle bar + height-animated wrapper */
+.setprod__toggle { display: flex; align-items: center; gap: 0.75rem; width: 100%; margin-top: 1.25rem; padding: 0.9rem 0 0;
+  border: 0; border-top: 1px solid var(--color-graphite-150, var(--color-graphite-200)); background: none; font: inherit; text-align: left; cursor: pointer; }
+.setprod__togglecap { flex: none; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-graphite-500); transition: color .16s; }
+.setprod__togglesum { flex: 1 1 auto; min-width: 0; font-size: 0.8125rem; color: var(--color-graphite-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transform: translateX(-0.25rem); transition: opacity .28s ease, transform .28s ease; }
+.setprod__toggle[aria-expanded="false"] .setprod__togglesum { opacity: 1; transform: none; }
+.setprod__chev { flex: none; width: 1.15rem; height: 1.15rem; margin-left: auto; color: var(--color-graphite-500); transition: transform .4s cubic-bezier(.4,0,.2,1), color .16s; }
+.setprod__toggle[aria-expanded="false"] .setprod__chev { transform: rotate(-90deg); }
+.setprod__toggle:hover .setprod__togglecap, .setprod__toggle:hover .setprod__chev { color: var(--color-teal); }
+.setprod__toggle:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 3px; border-radius: var(--radius); }
+
+.setprod__optswrap { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .42s cubic-bezier(.4,0,.2,1); }
+.setprod__optswrap.is-collapsed { grid-template-rows: 0fr; }
+.setprod__optswrap > .setprod__opts { min-height: 0; overflow: hidden; transition: opacity .3s ease, visibility .3s ease; }
+.setprod__optswrap.is-collapsed > .setprod__opts { opacity: 0; visibility: hidden; }
+
+/* options */
+.setprod__opts { display: flex; flex-direction: column; gap: 1.3rem; padding-top: 1.15rem; }
+@media (prefers-reduced-motion: reduce) {
+  .setprod__optswrap, .setprod__chev, .setprod__togglesum, .setprod__optswrap > .setprod__opts { transition: none; }
+}
+.setopt__lbl { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.setopt__name { font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.01em; color: var(--color-digital-black); }
+.setopt__incl { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-green); background: var(--color-green-50, #eaf6ee); border-radius: var(--radius-pill); padding: 0.12rem 0.45rem; }
+/* set-only: LED colour chip on the RIGHT of the .cfg-opt row, just before the price
+   (single product has none). Ringed so even a near-white tone reads clearly. */
+.cfg-opt__dot { flex: none; width: 0.9rem; height: 0.9rem; border-radius: 50%; margin-left: auto; margin-right: 0.7rem;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.22); }
+.cfg-opt__dot + .cfg-opt__price { margin-left: 0; }
+
+/* ============================================================
+   Taster illumination selector — premium visual swatch grid.
+   Images keep their native WHITE background, so the photo sits on a
+   SEAMLESS white stage (no visible box). The LED colour is expressed
+   OUTSIDE the photo: a colour-key chip + a rounded coloured under-glow
+   on the whole card (never behind the image → never a white box).
+   ============================================================ */
+.cfg-tstr-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.55rem; }
+/* borderless tiles: no hard resting border (was 1.5px graphite) — a soft
+   drop-shadow floats each tile so the grid reads clean, not boxed-in. The teal
+   border only appears on selection. */
+.cfg-tstr { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem;
+  padding: 0.55rem 0.55rem 0.7rem; background: var(--color-white); border: 1.5px solid transparent;
+  border-radius: var(--radius-lg); cursor: pointer; text-align: left; box-shadow: 0 1px 3px rgba(16,24,32,0.08), 0 1px 2px rgba(16,24,32,0.04);
+  transition: border-color .18s ease, box-shadow .22s ease, transform .18s ease; -webkit-tap-highlight-color: transparent; }
+.cfg-tstr:hover { transform: translateY(-2px);
+  box-shadow: 0 0.7rem 1.4rem -0.75rem rgba(10,20,20,0.32), 0 0 1rem -0.15rem color-mix(in srgb, var(--tstr-glow, transparent) 30%, transparent); }
+.cfg-tstr:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+/* keyboard focus indicators (WCAG 2.4.7) for set-specific controls */
+.stepr__head:focus-visible { outline: 2px solid var(--color-teal); outline-offset: -3px; border-radius: var(--radius-lg); }
+.setwiz__back:focus-visible, .setprod__relink:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; border-radius: var(--radius); }
+.cfgb-buyrow__qty button:focus-visible { outline: 2px solid var(--color-teal); outline-offset: -3px; }
+.setfin .pdp-swatch:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 3px; }
+.setsum__cta:focus-visible { outline: 2px solid var(--color-digital-black); outline-offset: 2px; }   /* dark ring on the teal CTA */
+.cfg-tstr.is-selected { border-color: var(--color-teal);
+  box-shadow: inset 0 0 0 1px var(--color-teal), 0 0.4rem 0.85rem -0.7rem color-mix(in srgb, var(--tstr-glow, var(--color-teal)) 28%, transparent); }
+
+/* seamless white stage — the photo's white background melts into it (no box).
+   isolation:isolate makes the stage its own stacking context, so the multiply
+   blends ONLY with this white backdrop — never the teal selection glow behind it. */
+.cfg-tstr__stage { position: relative; display: grid; place-items: center; aspect-ratio: 1 / 1; border-radius: var(--radius);
+  background: #fff; overflow: hidden; isolation: isolate; }
+.cfg-tstr__stage img { width: 88%; max-width: 5.4rem; aspect-ratio: 1 / 1; object-fit: contain; mix-blend-mode: multiply; transition: transform .22s ease; }
+/* fade the stage edges to pure white so the product photo's own soft shadow melts
+   away — the button sits in a clean white "spotlight", never a tinted box. */
+.cfg-tstr__stage::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(circle at 50% 47%, transparent 68%, #fff 100%); }
+.cfg-tstr:hover .cfg-tstr__stage img, .cfg-tstr.is-selected .cfg-tstr__stage img { transform: scale(1.05); }
+
+.cfg-tstr__meta { display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; padding: 0.1rem 0.1rem 0; }
+/* reserve two lines for the name so the descriptor + price align across a row */
+.cfg-tstr__name { min-height: 2.4em; display: flex; align-items: flex-start; text-align: left;
+  font-size: 0.875rem; font-weight: 700; letter-spacing: -0.01em; color: var(--color-digital-black); line-height: 1.2; }
+/* colour-key: small ring dot that carries the LED colour (steel gradient for "none") */
+.cfg-tstr__key { display: inline-flex; align-items: center; gap: 0.32rem; }
+.cfg-tstr__chip { width: 0.6rem; height: 0.6rem; border-radius: 50%; flex: none;
+  background: var(--tstr-glow, linear-gradient(135deg, #eceef1, #b7bcc2));
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.16), 0 0 0.25rem color-mix(in srgb, var(--tstr-glow, transparent) 70%, transparent); }
+.cfg-tstr__sub { font-size: 0.75rem; color: var(--color-graphite-600); line-height: 1.25; text-align: left; }
+.cfg-tstr__price { margin-top: 0.3rem; font-size: 0.8125rem; font-weight: 700; color: var(--color-digital-black); font-variant-numeric: tabular-nums; }
+.cfg-tstr__price.is-incl { color: var(--color-green); }
+
+/* selection control (top-LEFT), always visible: checkbox (square) for OPTIONAL,
+   radio (circle) for REQUIRED — fills teal when selected. Matches the live PDP. */
+.cfg-tstr__check { position: absolute; top: 0.8rem; left: 0.8rem; z-index: 3; width: 1.3rem; height: 1.3rem; border-radius: 0.35rem;
+  /* soft resting border = the design-system default input border (graphite-300);
+     the strong selected cue is the teal fill/ring, not the resting outline. */
+  box-sizing: border-box; border: 2px solid var(--color-graphite-300); background: var(--color-white);
+  display: grid; place-items: center; color: #fff; transition: border-color .15s ease, background .15s ease; }
+.cfg-tstr.is-required .cfg-tstr__check { border-radius: 50%; }
+.cfg-tstr__check svg { width: 0.82rem; height: 0.82rem; opacity: 0; transition: opacity .12s ease; }
+.cfg-tstr.is-required .cfg-tstr__check svg { display: none; }                 /* radio → dot, not a check */
+.cfg-tstr.is-required .cfg-tstr__check::after { content: ""; width: 0.6rem; height: 0.6rem; border-radius: 50%;
+  background: var(--color-teal); transform: scale(0); transition: transform .16s cubic-bezier(.2,.9,.3,1.5); }
+.cfg-tstr.is-selected .cfg-tstr__check { border-color: var(--color-teal); }
+.cfg-tstr.is-selected:not(.is-required) .cfg-tstr__check { background: var(--color-teal); }
+.cfg-tstr.is-selected:not(.is-required) .cfg-tstr__check svg { opacity: 1; }
+.cfg-tstr.is-required.is-selected .cfg-tstr__check::after { transform: scale(1); }
+/* check animation on selection: the box pops and the tick strokes itself in */
+.cfg-tstr__check svg path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.cfg-tstr.is-selected:not(.is-required) .cfg-tstr__check { animation: cfg-check-pop .28s cubic-bezier(.2,.9,.3,1.5); }
+.cfg-tstr.is-selected:not(.is-required) .cfg-tstr__check svg path { animation: cfg-check-draw .3s .06s cubic-bezier(.65,0,.35,1) forwards; }
+@keyframes cfg-check-draw { to { stroke-dashoffset: 0; } }
+@keyframes cfg-check-pop { 0% { transform: scale(0.8); } 55% { transform: scale(1.1); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .cfg-tstr__check svg path { stroke-dashoffset: 0; }
+  .cfg-tstr.is-required .cfg-tstr__check::after { transition: none; }
+  .cfg-tstr.is-selected:not(.is-required) .cfg-tstr__check,
+  .cfg-tstr.is-selected:not(.is-required) .cfg-tstr__check svg path { animation: none; }
+}
+
+/* additional-info glyph (top-RIGHT; Montage) — box-less, brand teal, non-interactive */
+.cfg-tstr__info { position: absolute; top: 0.7rem; right: 0.7rem; z-index: 4; width: 1.35rem; height: 1.35rem;
+  display: grid; place-items: center; color: var(--color-teal); pointer-events: none; }
+.cfg-tstr__info svg { width: 100%; height: 100%; }
+
+/* ---- Größe · real Stella product photo, scaled proportionally to the cm value.
+   Uses the shared 3-up grid (4 items → 3 + 1) so cards match the other sections. ---- */
+.cfg-size__stage { position: relative; display: grid; place-items: center; aspect-ratio: 1 / 1; border-radius: var(--radius);
+  background: #fff; overflow: hidden; isolation: isolate; }
+.cfg-size__stage::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(circle at 50% 47%, transparent 68%, #fff 100%); }
+.cfg-size__img { width: calc(38% + var(--sz, 0) * 46%); aspect-ratio: 1 / 1; object-fit: contain; mix-blend-mode: multiply;
+  transition: width .24s cubic-bezier(.2,.7,.2,1); }
+
+/* ---- Montage · photo cards share the Taster stage; icon fallback until images arrive ---- */
+/* Montage uses the same 3-up grid as the Taster (6 items → 3×2). */
+.cfg-tstr__stage--icon { background: linear-gradient(180deg, #fbfcfd 0%, #eef1f4 100%); }
+.cfg-tstr__stage--icon svg { width: 42%; height: 42%; color: var(--color-graphite-500); }
+
+@media (max-width: 30rem) {
+  .cfg-tstr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- Gravur · premium field (engraving-pen icon inside the input) ---- */
+.setgrv__field { position: relative; }
+.setgrv__icon { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); width: 1.1rem; height: 1.1rem; color: var(--color-graphite-500); pointer-events: none; }
+.setgrv__input { padding-left: 2.6rem; }
+
+/* selectable option cards */
+.setopt__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr)); gap: 0.55rem; }
+.optcard { position: relative; cursor: pointer; }
+.optcard input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.optcard__box { position: relative; display: flex; flex-direction: column; gap: 0.2rem; height: 100%; padding: 0.65rem 0.8rem; box-sizing: border-box;
+  background: var(--color-white); border: 1px solid var(--color-graphite-300); border-radius: var(--radius); transition: border-color .16s, box-shadow .16s, background .16s; }
+.optcard:hover .optcard__box { border-color: var(--color-graphite-400); }
+.optcard__main { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.875rem; font-weight: 700; color: var(--color-digital-black); }
+.optcard__dot { flex: none; width: 0.85rem; height: 0.85rem; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2); }
+.optcard__delta { font-size: 0.75rem; font-weight: 600; color: var(--color-graphite-500); font-variant-numeric: tabular-nums; }
+.optcard__delta--incl { color: var(--color-green); }
+.optcard__check { position: absolute; top: 0.45rem; right: 0.5rem; display: grid; place-items: center; width: 1.05rem; height: 1.05rem;
+  border-radius: 50%; background: var(--color-teal); color: #fff; opacity: 0; transform: scale(0.6); transition: opacity .16s, transform .16s; }
+.optcard__check svg { width: 0.7rem; height: 0.7rem; }
+.optcard input:checked + .optcard__box { border-color: var(--color-teal); box-shadow: inset 0 0 0 1px var(--color-teal); background: var(--color-teal-50); }
+.optcard input:checked + .optcard__box .optcard__check { opacity: 1; transform: scale(1); }
+.optcard input:checked + .optcard__box .optcard__delta { color: var(--color-teal); }
+.optcard input:focus-visible + .optcard__box { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+
+/* engraving field */
+.setopt__field { position: relative; display: flex; align-items: center; }
+.setopt__fieldicon { position: absolute; left: 0.8rem; width: 1.05rem; height: 1.05rem; color: var(--color-graphite-500); pointer-events: none; }
+.setopt__text { width: 100%; padding: 0.7rem 0.9rem 0.7rem 2.45rem; font: inherit; font-size: 0.9375rem; border: 1px solid var(--color-graphite-300); border-radius: var(--radius); background: var(--color-white); color: var(--color-digital-black); transition: border-color .16s, box-shadow .16s; }
+.setopt__text::placeholder { color: var(--color-graphite-400); }
+.setopt__text:focus { outline: none; border-color: var(--color-teal); box-shadow: 0 0 0 3px var(--color-teal-50); }
+.setopt__fieldhint { display: block; margin-top: 0.35rem; font-size: 0.6875rem; color: var(--color-graphite-500); }
+
+/* required-step SECTION cue (single-PDP `.cfg-opts.is-invalid .cfg-opt`): just a QUIET
+   red border on the option cards — no ring, no pulse. Fades in via each card's own
+   border-color transition; a brief attention flash that auto-clears (~1.6s or on pick,
+   set.js). The persistent "where" cue is the red progress tab. */
+.setprod [role="radiogroup"].is-invalid .cfg-opt { border-color: var(--color-red); }
+/* minimal attention nudge on a failed attempt (single-PDP cfgb-shake) — a small, quick
+   horizontal shake, nothing more. */
+.setprod [role="radiogroup"].is-shake { animation: setopt-nudge .45s ease; }
+@keyframes setopt-nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 55% { transform: translateX(3px); } 80% { transform: translateX(-1.5px); } }
+@media (prefers-reduced-motion: reduce) { .setprod [role="radiogroup"].is-shake { animation: none; } }
+
+/* ---- media: the set hero is a finished bundle image with its own studio
+   backdrop, so it fills the stage edge-to-edge instead of sitting inset on the
+   default pedestal gradient. ---- */
+.pdp-b .pdp-media__stage { aspect-ratio: auto; background: none; box-shadow: none; }
+.pdp-b .pdp-media__img { width: 100%; height: auto; max-width: 100%; max-height: none; border-radius: var(--radius-xl); }
+.pdp-b .pdp-media__stage:hover .pdp-media__img { transform: none; }
+
+/* v4 (flow-d) opener: the boxed "Alle Farben mit Bezeichnung ansehen" field with a
+   selected-finish thumbnail (ported from the working folder, scoped to the set rail). */
+.setfin .bx-listfield { display: flex; align-items: center; gap: 0.7rem; width: 100%; padding: 0.7rem 0.85rem; text-align: left; font: inherit; cursor: pointer;
+  background: var(--color-white); border: 1px solid var(--color-graphite-300); border-radius: var(--radius-lg);
+  transition: border-color .18s cubic-bezier(.22,1,.36,1), box-shadow .18s cubic-bezier(.22,1,.36,1); }
+.setfin .bx-listfield:hover { border-color: var(--color-teal); box-shadow: 0 1px 2px rgba(26,23,27,0.06); }
+.setfin .bx-listfield:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+.setfin .bx-listfield__icon { flex: none; width: 1.15rem; height: 1.15rem; color: var(--color-teal); }
+.setfin .bx-listfield__text { flex: 0 1 auto; min-width: 0; font-size: 0.9375rem; font-weight: 700; color: var(--color-digital-black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setfin .bx-listfield__thumb { flex: none; margin-left: auto; width: 1.85rem; height: 1.85rem; box-sizing: border-box; border-radius: var(--radius); overflow: hidden; background: var(--color-paper); border: 1px solid var(--color-graphite-200); }
+.setfin .bx-listfield__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.setfin .bx-listfield__thumb:empty { display: none; }
+.setfin .bx-listfield__chev { flex: none; margin-left: 0; width: 1.15rem; height: 1.15rem; color: var(--color-graphite-500); transition: transform .18s cubic-bezier(.22,1,.36,1), color .18s ease; }
+.setfin .bx-listfield:hover .bx-listfield__chev { color: var(--color-teal); transform: translateX(0.125rem); }
+
+/* ---- finish rail swatches: color-fill tile + "bricht das Set" badge ----
+   The rail reuses the single-product .bx-swatches / .pdp-swatch component; these
+   rules only add what the set needs on top: a solid colour tile for finishes with
+   no photo swatch, and the divergence badge on Briefkasten-only finishes. */
+.pdp-b .setfin .pdp-swatch__fill { display: block; width: 100%; aspect-ratio: 1; box-sizing: border-box;
+  border: 1px solid var(--color-graphite-300); border-radius: var(--radius); }
+.pdp-b .setfin .pdp-swatch:hover .pdp-swatch__fill { border-color: var(--color-graphite-400); }
+.pdp-b .setfin .pdp-swatch[aria-pressed="true"] .pdp-swatch__fill { border-width: 2px; border-color: var(--color-teal); }
+.pdp-b .setfin .pdp-swatch--solo { position: relative; }
+.pdp-b .setfin .pdp-swatch__break { position: absolute; top: -0.4rem; right: -0.3rem; z-index: 1;
+  font-size: 0.5625rem; font-weight: 700; line-height: 1; color: var(--color-red); background: var(--color-red-50);
+  border: 1px solid var(--color-red); border-radius: var(--radius-pill); padding: 0.15rem 0.35rem; pointer-events: none; }
+.setfin .bx-color__label b { color: var(--color-digital-black); }
+/* divergence mini-swatches sit in a flex row (no grid track) – give the reused
+   .pdp-swatch tile an explicit footprint so its edge-to-edge image resolves */
+.pdp-b .setprod__sepgrid .pdp-swatch { width: 2.75rem; }
+
+/* ---- v4 material-texture swatches (grabbed from the single-product working folder).
+   Each finish renders its actual surface (a square WebP) as the tile background; the
+   selected tile gets the RAL-picker's proven language: teal ring + a filled check. ---- */
+.pdp-b .pdp-swatch--mat { position: relative; aspect-ratio: 1; width: 100%; height: auto; box-sizing: border-box; overflow: hidden; padding: 0;
+  border: 1px solid var(--color-graphite-300); border-radius: var(--radius);
+  background-repeat: no-repeat; background-size: cover; background-position: center; }
+.pdp-b .pdp-swatch--mat img { display: none; }
+.pdp-b .pdp-swatch--mat:hover { border-color: var(--color-graphite-400); }
+.pdp-b .pdp-swatch--mat[aria-pressed="true"] { border-width: 2px; border-color: var(--color-teal); }
+.pdp-b .setprod__sepgrid .pdp-swatch--mat { width: 2.75rem; }
+/* filled check badge on the chosen material tile */
+.pdp-swatch__check { position: absolute; top: 0.3rem; right: 0.3rem; z-index: 3; width: 1rem; height: 1rem; display: none; place-items: center;
+  background: var(--color-teal); color: var(--color-white); border-radius: 50%; box-shadow: 0 0 0 2px var(--color-white), 0 1px 3px rgba(26,23,27,0.35); }
+.pdp-swatch__check svg { width: 0.66rem; height: 0.66rem; }
+.pdp-swatch[aria-pressed="true"] .pdp-swatch__check { display: grid; }
+
+/* the independent colour section: a standalone Ausführung block above the config flow */
+.setfin { margin-bottom: 0.25rem; }
+
+/* ---- summary · premium set price panel ----
+   A calm, confident checkout card: product line items with thumbnails + finish
+   chip, a clear price ladder, the set saving surfaced as a badge + strikethrough
+   original, and a single decisive CTA. Tuned as a lead-product-designer pass. */
+.setsum__card { background: var(--color-white); border: 1px solid var(--color-graphite-200); border-radius: var(--radius-lg);
+  padding: 1.35rem 1.4rem 1.4rem; }
+.setsum__head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.05rem; }
+.setsum__title { margin: 0; font-size: 1.125rem; font-weight: 700; letter-spacing: -0.01em; color: var(--color-digital-black); }
+.setsum__badge { flex: none; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.02em; color: var(--color-green); background: var(--color-green-50, #eaf6ee);
+  border: 1px solid var(--color-green-200, #bfe3cb); border-radius: var(--radius-pill); padding: 0.22rem 0.6rem; }
+
+/* block (not flex) so each product's details grid-rows reveal can resolve its
+   height; products are spaced with margins instead of flex gap */
+.setsum__items { display: block; padding-bottom: 0; }
+.setsum__prod + .setsum__prod { margin-top: 0.9rem; }
+/* one surface, no nesting (Codex proposal): the breakdown stays in-card — no
+   full-bleed breakout — separated only by hairlines. */
+.setsum__items, .setsum__rows, .setsum__total { margin-inline: 0; padding-inline: 0; }
+.setsum__item { display: flex; align-items: center; gap: 0.8rem; }
+.setsum__ithumb { flex: none; width: 2.9rem; height: 2.9rem; border-radius: var(--radius); overflow: hidden;
+  background: var(--color-paper); border: 1px solid var(--color-graphite-200); display: grid; place-items: center; }
+.setsum__ithumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.setsum__imain { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+.setsum__iname { font-size: 0.9375rem; font-weight: 700; color: var(--color-digital-black); line-height: 1.25; }
+.setsum__imeta { font-size: 0.75rem; color: var(--color-graphite-600); }
+.setsum__ifin { display: inline-flex; align-items: center; gap: 0.35rem; }
+.setsum__ifchip { width: 0.85rem; height: 0.85rem; border-radius: 0.2rem; background-size: cover; background-position: center; border: 1px solid rgba(0,0,0,0.14); }
+.setsum__todo { display: inline-flex; align-items: center; font-size: 0.6875rem; font-weight: 700; color: var(--color-amber-700, #9a6a00);
+  background: var(--color-amber-50, #fff6e5); border: 1px solid var(--color-amber-200, #f4dca1); border-radius: var(--radius-pill); padding: 0.1rem 0.5rem; }
+.setsum__iopts { display: flex; flex-direction: column; gap: 0.1rem; margin-top: 0.15rem; }
+.setsum__iopt { font-size: 0.6875rem; color: var(--color-graphite-500); }
+.setsum__iopt em { font-style: normal; font-weight: 600; color: var(--color-graphite-600); }
+.setsum__iprice { grid-row: 1 / span 2; align-self: center; font-size: 0.9375rem; font-weight: 700; color: var(--color-digital-black); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.setsum__iqty { font-weight: 700; color: var(--color-graphite-500); }
+
+.setsum__prod { display: block; }
+/* per-product "Ausstattung im Detail" = a minimal bordered BAR that, when open,
+   shares one frame with its content (a self-contained accordion unit) */
+/* full-width: the "Ausstattung im Detail" bars break out to the config-bar edges
+   (−1.45rem, matching the step bars and price frame); side borders dropped so the
+   paper bar reads edge-to-edge. */
+.setsum__acc { margin: 0.55rem -1.45rem 0; border: 0.0625rem solid var(--color-graphite-200); border-left: 0; border-right: 0; border-radius: 0; overflow: hidden; }
+.setsum__acctoggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  padding: 0.6rem 0.85rem; background: var(--color-paper); border: 0; cursor: pointer; font: inherit; font-size: 0.8125rem; font-weight: 700; color: var(--color-teal); text-align: left; transition: background .15s ease; }
+.setsum__acctoggle:hover { background: var(--color-graphite-100); }
+.setsum__acctoggle:focus-visible { outline: 2px solid var(--color-teal); outline-offset: -2px; }
+.setsum__acctoggle svg { flex: none; width: 1rem; height: 1rem; transition: transform .2s ease; }
+.setsum__acctoggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+/* body shares the frame; a hairline separates it from the bar when open. The
+   open/close animation is driven in JS (animateDisclosure) which transitions an
+   explicit pixel height 0 ⇄ scrollHeight — never to an intrinsic size, so it works
+   in every engine. Collapsed height:0 + overflow:hidden clips the padded content to
+   a true zero (no empty frame); .is-open height:auto is the resting state after a
+   re-render (JS re-applies the animation only on user toggles). */
+.setsum__accbody { overflow: hidden; height: 0; transition: height .28s ease; }
+.setsum__acc.is-open .setsum__accbody { height: auto; }
+.setsum__accbody .setdt__items { border: 0; background: none;
+  padding: 0.5rem 0.85rem 0.65rem; border-top: 1px solid var(--color-graphite-150, var(--color-graphite-200)); }
+
+/* Set-Rabatt (the offer) sits just below the items with breathing room and NO line —
+   a hairline here would clash with the full-width "Ausstattung im Detail" bar's own
+   edges (and double up when it's expanded). The single grounding line lives BELOW the
+   discount, above Gesamtsumme (see .setsum__total) — away from the bar, anchoring the
+   final total while the discount stays visually tied to it right above. */
+.setsum__rows { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.9rem; padding: 0 0 0.6rem; }
+.setsum__row { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.875rem; color: var(--color-graphite-700); font-variant-numeric: tabular-nums; }
+.setsum__row--disc { color: var(--color-green); font-weight: 700; }
+.setsum__row--disc em { font-style: normal; }
+
+/* the single grounding hairline sits here — above Gesamtsumme, below the discount, and
+   well clear of the "Ausstattung im Detail" bar so nothing doubles up. */
+.setsum__total { display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding-top: 0.9rem; border-top: 1px solid var(--color-graphite-200); }
+.setsum__totl { display: flex; flex-direction: column; }
+.setsum__totcap { font-size: 1rem; font-weight: 700; color: var(--color-digital-black); }
+.setsum__totvat { font-size: 0.6875rem; color: var(--color-graphite-500); }
+.setsum__totr { display: flex; align-items: baseline; gap: 0.5rem; }
+.setsum__totwas { font-size: 0.9375rem; font-weight: 600; color: var(--color-graphite-600); text-decoration: line-through; font-variant-numeric: tabular-nums; }
+.setsum__totnow { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; color: var(--color-digital-black); font-variant-numeric: tabular-nums; }
+/* framed totals panel: the running total lives in its own self-contained frame (same
+   treatment as the delivery frame below) — grounded, and clearly distinct from the item
+   list above. The frame provides the top separation, so the rows drop their own margin. */
+.setsum__totals { margin: 1rem -1.45rem 0; padding: 0.95rem 1.45rem 1.05rem;   /* full-width band, breaking out to the card edges like the "Ausstattung im Detail" bars */
+  background: var(--color-paper);   /* the config's grey */
+  border-top: 1px solid var(--color-graphite-200); border-bottom: 1px solid var(--color-graphite-200); }
+.setsum__totals .setsum__rows { margin-top: 0; }
+
+.setsum__save { display: flex; align-items: center; gap: 0.45rem; margin: 0.85rem 0 0; padding: 0.55rem 0.75rem; font-size: 0.8125rem; font-weight: 700;
+  color: var(--color-green); background: var(--color-green-50, #eaf6ee); border-radius: var(--radius); }
+.setsum__save svg { width: 1rem; height: 1rem; flex: none; }
+.setsum__save b { color: var(--color-green); }
+
+/* primary CTA = design-system .btn--primary.btn--lg: height-based sizing, weight
+   500, 4px radius, no shadow, teal-600/700 states (identical to the gate CTA) */
+.setsum__cta { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem;
+  height: 3rem; padding: 0 2rem; background: var(--color-teal); color: #fff; border: 0; border-radius: var(--radius);
+  font: inherit; font-size: 1.0625rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background .14s, color .14s; }
+.setsum__cta svg { width: 1.15rem; height: 1.15rem; }
+.setsum__cta.is-ready:hover { background: var(--color-teal-600); }
+.setsum__cta.is-ready:active { background: var(--color-teal-700); }
+.setsum__cta[aria-disabled="true"] { background: var(--color-graphite-200); color: var(--color-graphite-500); cursor: not-allowed; }
+
+.setsum__trust { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin-top: 0.9rem; }
+.setsum__trustitem { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8125rem; color: var(--color-graphite-700); }
+.setsum__trustitem svg { width: 1.05rem; height: 1.05rem; color: var(--color-graphite-500); }
+.setsum__trustitem b { color: var(--color-digital-black); font-weight: 700; }
+.setsum__dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-green); flex: none; }
+/* delivery table — styled + placed like the single-product PDP: rounded card
+   (inherits .bx-delivery's --radius-lg), sitting BELOW the configurator card as a
+   standalone frame (it renders into #setDelivery, a .setcfg child outside .setwiz).
+   Spacing comes from .setcfg's own flex gap, so no extra top margin here. */
+.setsum__delivery { margin-top: 0; }
+.setsum__note { margin: 0.85rem 0 0; font-size: 0.6875rem; color: var(--color-graphite-500); text-align: center; }
+
+/* ---- colour side-window: inset hairline dividers between rows, matching the
+   single-product PDP (inset 1.25rem via ::after, not a full-bleed border).
+   Scoped to #colorwin so the shared component is untouched. ---- */
+#colorwin .colorwin__row + .colorwin__row::after {
+  content: ""; position: absolute; top: 0; left: 1.25rem; right: 1.25rem; height: 1px;
+  background: var(--color-graphite-200); pointer-events: none;
+}
+
+/* ============================================================
+   Accessibility pass — legible-text minimum + AA contrast (scoped to the set
+   configuration). (1) No configuration text renders below 13px: every eyebrow,
+   caption, badge, meta and fine-print label is lifted to at least 0.8125rem.
+   (2) Low-contrast graphite-500 (#A1A1A1 ≈ 2.3:1, fails WCAG AA) body text is
+   raised to graphite-600 (#6A6A6A ≈ 5.4:1, passes AA). Verified live: no text
+   node < 13px remains in .setcfg.
+   ============================================================ */
+/* (1) 13px floor — set-specific labels */
+.setcfg .setwizhd__cap, .setcfg .setwizhd__pricecap,
+.setcfg .setfin__cap, .setcfg .setfin__solohead, .setcfg .setfin__break, .setcfg .setfin__nm em,
+.setcfg .setprod__cap, .setcfg .setprod__pricecap, .setcfg .setprod__togglecap,
+.setcfg .setopt__incl, .setcfg .setopt__fieldhint,
+.setcfg .cfg-tstr__sub, .setcfg .cfg-tstr__price,
+.setcfg .optcard__delta,
+.setcfg .setdt__meta, .setcfg .setdt__mult, .setcfg .setdt__eyebrow,
+.setcfg .setsum__iopt, .setcfg .setsum__imeta, .setcfg .setsum__iqty, .setcfg .setsum__totvat,
+.setcfg .setsum__note, .setcfg .setsum__badge, .setcfg .setsum__todo,
+/* 13px floor — shared components used inside the configuration */
+.setcfg .cfgb-price__label, .setcfg .pdp-offer__pct, .setcfg .pdp-offer__dur,
+.setcfg .stepr__num, .setcfg .stepr__req, .setcfg .stepr__opt,
+.setcfg .cfg-opt__tag, .setcfg .cfgb-hint, .setcfg .cfgb-reassure,
+.setcfg .cfgb-bar__num, .setcfg .cfgb-dock__n
+{ font-size: 0.8125rem; }
+/* lead-panel "PREIS WIE KONFIGURIERT" eyebrow — needs an ID to beat the shared
+   `.pdp-b .pdp-price--lead .cfgb-price__label:not([hidden])` (0,4,0) rule. */
+#setLead .cfgb-price__label { font-size: 0.8125rem; }
+
+/* (2) AA contrast — lift graphite-500 body text to graphite-600 */
+.setcfg .setfin__solohead, .setcfg .setprod__togglecap, .setcfg .setopt__fieldhint,
+.setcfg .setdt__mult, .setcfg .optcard__delta, .setcfg .pdp-price__was,
+.setcfg .setsum__iopt, .setcfg .setsum__iqty, .setcfg .setsum__totvat, .setcfg .setsum__note
+{ color: var(--color-graphite-600); }
+
+/* CTA label: the shorter "In den Warenkorb" is hidden by default (desktop shows the
+   full "Set in den Warenkorb"); the mobile block below swaps them. */
+.setcta-short { display: none; }
+
+/* ============================================================
+   Mobile fixes (set page only; set.css loads only here)
+   ============================================================ */
+@media (max-width: 47.9375rem) {
+  /* The configurator card (progress steps + per-product config + price detail)
+     spans the FULL viewport width on mobile — cancel the 1.5rem container side
+     padding. The lead price panel and the colour section stay inset. */
+  .setwiz { margin-left: -1.5rem; margin-right: -1.5rem;
+    /* full-bleed edge-to-edge on mobile → square the corners (rounded corners would
+       leave notches against the screen edges). */
+    border-radius: 0; }
+  /* while LOCKED the card is just the "Bitte Farbe wählen" gate CTA — keep it inset
+     (with side margins) instead of stretching edge-to-edge across the screen. */
+  .setwiz.is-locked { margin-left: 0; margin-right: 0; }
+
+  /* the config column runs the .pdp-buybox entrance animation (pdp-rise animates
+     `transform`); an element with a transform animation is a containing block for
+     position:fixed, which would trap the fixed dock inside it (not the viewport).
+     Drop the animation + transform on mobile so the fixed dock anchors to the
+     viewport (mirrors the single-product PDP's `.cfgb { transform:none; animation:none }`). */
+  .setcfg { transform: none !important; animation: none !important; opacity: 1 !important; }
+
+  /* Mobile sticky dock: native position:sticky. It pins at --set-dock-top
+     (= header + the sticky contact bar), i.e. flush BELOW the contact bar, so the two
+     never collide. The product-heading row stays visible (so the band below the ribbon
+     carries the active product's identity + live price, like desktop) but in a COMPACT
+     form: smaller thumb, no long descriptor line, so the pinned dock stays short. */
+  /* above the mobile sticky contact bar (#quickbar is z-55 on mobile), below the
+     scrolled header (z-90) — the ribbon takes the contact bar's slot cleanly. */
+  /* full-bleed on mobile → square the dock's top corners too (the rounded top
+     matches the desktop card, but here it leaves notches against the screen edges). */
+  .setwiz .cfgb-dock { z-index: 60; border-radius: 0; }
+  /* Green contact bar: hidden for the whole scroll on mobile (the config ribbon, then
+     the section nav after the baton pass, own the top slot). Without this it would —
+     being z-55 — paint OVER the section nav (z-50) after the ribbon hands off. opacity
+     keeps its layout slot → no jump. (Desktop keeps the bar visible; dock stacks below.) */
+  body.is-scrolled .quickbar { opacity: 0; pointer-events: none; }
+  /* PDP-style fixed takeover (ported from pdp-b): once the configurator scrolls under
+     the header, JS adds .is-fixed and the ribbon detaches as a FULL-WIDTH bar fixed to
+     the top, persisting the whole page down (native sticky can't — it's bounded by the
+     card). `top` is set inline by JS to the live header height. It covers the green
+     contact bar; .is-stuck (added together) hides the product-header band so only the
+     ribbon shows. Overrides the set's own `position: sticky` (higher specificity). */
+  .setwiz .cfgb-dock.is-fixed {
+    position: fixed; left: 0; right: 0; width: 100%; z-index: 80;
+    padding: 0; border-radius: 0; border-bottom: 1px solid var(--color-graphite-200);
+    box-shadow: 0 8px 16px -10px rgba(10,20,20,0.32);
+    transform: translateZ(0);   /* own compositing layer — iOS keeps it above scrolling content */
+  }
+  .setwiz .cfgb-dock.is-fixed::before { display: none; }         /* no paper bleed above */
+  .setwiz .cfgb-dock.is-fixed .cfgb-bar__track { margin: 0; }    /* ribbon spans edge-to-edge */
+  .setwiz .cfgb-dock__title.setwizhd { display: flex; gap: 0.7rem; padding-top: 0.1rem; }
+  .setwiz .setwizhd__sub { display: none; }
+  .setwizhd__img { width: 2.75rem; height: 2.75rem; }
+  .setwiz .setwizhd__name { font-size: 1rem; margin: 0.05rem 0; }
+  .setwizhd__price b { font-size: 1.125rem; }
+
+  /* Breadcrumb: never wrap to a 2nd line — keep it one line and truncate the long
+     current-page crumb with an ellipsis. */
+  .crumb ol { flex-wrap: nowrap; }
+  .crumb li:last-child { min-width: 0; }
+  .crumb li:last-child [aria-current] { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Product title: looser leading + natural wrap — `text-wrap: balance` was stacking
+     it into short, cramped lines on mobile. */
+  .pdp-b .set-title { text-wrap: pretty; line-height: 1.5; }
+
+  /* CTA label drops the leading "Set" on mobile so "In den Warenkorb" fits one line. */
+  .setcta-full { display: none; }
+  .setcta-short { display: inline; }
+  /* tighten the stepper + CTA padding so the short label fits on ONE line beside the
+     qty box (the default 2rem CTA padding would otherwise force it to wrap). */
+  .cfgb-buyrow__qty button { width: 2.25rem; }
+  .cfgb-buyrow .setsum__cta { padding-left: 0.75rem; padding-right: 0.75rem; }
+}
+
+/* Set-colour swatches → the single-product PDP touch carousel (its `.swtouch .bx-swatches`).
+   pdp-b.js (which adds body.swtouch) is omitted here, so this media-query replica reproduces
+   the SAME appearance: one horizontally scrollable row (~4.5 tiles in view so the next is
+   always half-clipped), FREE scroll (no snap — snapping trapped the last tiles on the PDP),
+   vertical breathing room, a small trailing pad, and an edge-fade cue (set.js sets data-scroll). */
+@media (max-width: 35rem) {
+  .setfin .bx-swatches { position: relative; display: flex; grid-template-columns: none; flex-wrap: nowrap;
+    align-items: center; gap: 0.7rem; padding: 0.75rem 0;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; --sw-fade: 0.75rem; }
+  .setfin .bx-swatches::-webkit-scrollbar { display: none; }
+  .setfin .bx-swatches::after { content: ""; flex: 0 0 0.25rem; }   /* trailing pad so the last tile isn't jammed */
+  .setfin .bx-swatches .pdp-swatch { flex: 0 0 calc((100% - 2.8rem) / 4.5); justify-content: center; }
+  /* edge fade: fade whichever side still has swatches off-screen (data-scroll set in set.js).
+     A slim fade with a CONVEX ramp (a 0.72-alpha stop above the linear midpoint) keeps the
+     peek tile crisp for most of its width and only dissolves at the very edge — a soft "more
+     to the right" hint, not a hard colour→white band that reads as a shadow across the tile. */
+  .setfin .bx-swatches[data-scroll="start"]  { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - var(--sw-fade)), rgba(0,0,0,0.72) calc(100% - var(--sw-fade)*0.5), transparent 100%); mask-image: linear-gradient(90deg, #000 calc(100% - var(--sw-fade)), rgba(0,0,0,0.72) calc(100% - var(--sw-fade)*0.5), transparent 100%); }
+  .setfin .bx-swatches[data-scroll="middle"] { -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,0.72) calc(var(--sw-fade)*0.5), #000 var(--sw-fade), #000 calc(100% - var(--sw-fade)), rgba(0,0,0,0.72) calc(100% - var(--sw-fade)*0.5), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,0.72) calc(var(--sw-fade)*0.5), #000 var(--sw-fade), #000 calc(100% - var(--sw-fade)), rgba(0,0,0,0.72) calc(100% - var(--sw-fade)*0.5), transparent 100%); }
+  .setfin .bx-swatches[data-scroll="end"]    { -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,0.72) calc(var(--sw-fade)*0.5), #000 var(--sw-fade)); mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,0.72) calc(var(--sw-fade)*0.5), #000 var(--sw-fade)); }
+  .setfin .bx-swatches[data-scroll="none"]   { -webkit-mask-image: none; mask-image: none; }
+}

@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Local Claude Code settings (machine-specific, never commit)
+.claude/settings.local.json
+
+.claude/
+*-briefing.md
+*-spec.md
+*-playbook.md
+
+.github/workflows/
